@@ -1,0 +1,53 @@
+cmake_minimum_required(VERSION 3.16)
+project(MyCodeEditor)
+
+# Автоматизация Qt
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
+
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Поиск Qt с проверкой версии
+find_package(Qt5 5.15 REQUIRED COMPONENTS Core Widgets Gui)
+
+set(SOURCES
+    src/main.cpp
+    src/mainwindow.cpp
+    src/syntaxhighlighter.cpp
+)
+
+set(HEADERS
+    src/mainwindow.h
+    src/syntaxhighlighter.h
+)
+
+add_executable(MyCodeEditor ${SOURCES} ${HEADERS})
+
+target_link_libraries(MyCodeEditor
+    Qt5::Core
+    Qt5::Widgets
+    Qt5::Gui
+)
+
+# Улучшенная проверка для Windows
+if(WIN32 OR BUILD_FOR_WINDOWS)
+    target_link_options(MyCodeEditor PRIVATE
+        -static
+        -static-libgcc
+        -static-libstdc++
+        -mwindows
+    )
+
+    set_target_properties(MyCodeEditor PROPERTIES
+        SUFFIX ".exe"
+    )
+endif()
+
+target_include_directories(MyCodeEditor PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+# Предупреждения компилятора
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(MyCodeEditor PRIVATE -Wall -Wextra)
+endif()
