@@ -1,0 +1,67 @@
+name: Build for Windows
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-windows:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install complete MinGW toolchain
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          qt5-default \          
+          mingw-w64 \
+          g++-mingw-w64-x86-64 \
+          gcc-mingw-w64-x86-64 \
+          cmake \
+          make \
+          p7zip-full
+
+    - name: Verify MinGW installation
+      run: |
+        x86_64-w64-mingw32-gcc --version
+        x86_64-w64-mingw32-g++ --version
+        which make
+
+    - name: Create simple Makefile for testing
+      run: |
+        cat > Makefile.windows << 'EOF'
+        CXX = x86_64-w64-mingw32-g++
+        CXXFLAGS = -O2 -static -mwindows
+        SOURCES = src/main.cpp src/mainwindow.cpp src/syntaxhighlighter.cpp
+        HEADERS = src/mainwindow.h src/syntaxhighlighter.h
+        TARGET = MyCodeEditor.exe
+
+        $(TARGET): $(SOURCES) $(HEADERS)
+        	$(CXX) $(CXXFLAGS) -o $(TARGET) $(SOURCES)
+
+        clean:
+        	rm -f $(TARGET)
+
+        .PHONY: clean
+        EOF
+
+    - name: Build with direct Makefile
+      run: |
+        make -f Makefile.windows
+
+    - name: Verify executable
+      run: |
+        file MyCodeEditor.exe
+        ls -la MyCodeEditor.exe
+
+    - name: Upload Windows executable
+      uses: actions/upload-artifact@v4
+      with:
+        name: MyCodeEditor-Windows
+        path: MyCodeEditor.exe

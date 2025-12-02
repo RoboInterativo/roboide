@@ -1,0 +1,6 @@
+build
+bin
+*.zip
+build-windows
+build_win
+trash
